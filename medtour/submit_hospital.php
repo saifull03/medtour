@@ -29,6 +29,8 @@
         .name h1 {
             margin: 0;
         }
+
+        
         nav ul {
             list-style-type: none;
             margin: 0;
