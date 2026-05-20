@@ -1,206 +1,112 @@
+<?php
+session_start();
+if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'admin') {
+    header("Location: login_admin.php"); exit();
+}
+$conn = new mysqli("localhost","root","","mt_db");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+$search = isset($_GET["patient_id"]) ? $_GET["patient_id"] : "";
+$sql = "SELECT * FROM hotel_bookings";
+if (!empty($search)) $sql .= " WHERE patient_id = " . intval($search);
+$sql .= " ORDER BY id DESC";
+$result = $conn->query($sql);
+
+$statusColors = ['pending'=>'bg-amber-100 text-amber-700','approved'=>'bg-emerald-100 text-emerald-700','completed'=>'bg-sky-100 text-sky-700','cancelled'=>'bg-rose-100 text-rose-700'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Hotel Bookings - Medical Tourism Service</title>
-    <style>
-        /* Your CSS styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('hotel.png');
-            background-size: cover;
-            background-position: center;
-        }
-
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            text-align: center;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #333;
-            color: #fff;
-        }
-        .update-button {
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .update-button:hover {
-            background-color: #45a049;
-        }
-        .search-form {
-            margin-bottom: 20px;
-        }
-        .search-form input[type="text"] {
-            padding: 8px;
-            width: 200px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .search-form input[type="submit"] {
-            padding: 8px 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .search-form input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Bookings – Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                <li><a href="login_admin.php">Admin</a></li>
-                <li><a href="login_user.php">User</a></li>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="help.php">Help</a></li>
-            </ul>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-indigo-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="welcome_admin.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-indigo-300">Admin</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-5">
+            <a href="welcome_admin.php"        class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="view_admin_transport.php"  class="text-slate-300 hover:text-white text-sm transition">Transport</a>
+            <a href="view_admin_visa.php"       class="text-slate-300 hover:text-white text-sm transition">Visa</a>
+            <a href="view_admin_hospital.php"   class="text-slate-300 hover:text-white text-sm transition">Hospital</a>
+            <a href="view_admin_hotel.php"      class="text-indigo-300 text-sm font-semibold">Hotel</a>
         </nav>
-    </header>
+        <a href="logout_admin.php" class="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
+    </div>
+</header>
 
-    <div class="container">
-        <h2>Hotel Bookings</h2>
-        <div class="search-form">
-            <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-                <input type="text" name="patient_id" placeholder="Enter Patient ID" value="<?php echo isset($_GET['patient_id']) ? $_GET['patient_id'] : ''; ?>">
-                <input type="submit" value="Search">
-            </form>
+<main class="max-w-7xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">🏨 Hotel Bookings</h1>
+            <p class="text-slate-500 text-sm">Monitor all patient hotel reservation records</p>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
+        <a href="welcome_admin.php" class="text-slate-500 hover:text-slate-800 text-sm transition">← Back to Dashboard</a>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+        <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>" class="flex items-center gap-3">
+            <input type="text" name="patient_id" placeholder="Search by Patient ID…"
+                value="<?php echo htmlspecialchars($search); ?>"
+                class="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-56">
+            <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">🔍 Search</button>
+            <?php if (!empty($search)): ?><a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="text-slate-500 hover:text-slate-800 text-sm transition">Clear</a><?php endif; ?>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th>Patient ID</th>
-                        <th>Hotel Name</th>
-                        <th>Check-in Date</th>
-                        <th>Check-in Time</th>
-                        <th>Check-out Date</th>
-                        <th>Number of Guests</th>
-                        <th>Room Type</th>
-                        <th>Action</th>
+                        <th class="px-4 py-3 text-left font-semibold">ID</th>
+                        <th class="px-4 py-3 text-left font-semibold">Patient ID</th>
+                        <th class="px-4 py-3 text-left font-semibold">Hotel Name</th>
+                        <th class="px-4 py-3 text-left font-semibold">Check-in</th>
+                        <th class="px-4 py-3 text-left font-semibold">Check-out</th>
+                        <th class="px-4 py-3 text-left font-semibold">Guests</th>
+                        <th class="px-4 py-3 text-left font-semibold">Room Type</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100">
                     <?php
-                    // Database connection
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "mt_db";
-
-                    $conn = new mysqli($servername, $username, $password, $dbname);
-
-                    if ($conn->connect_error) {
-                        die("Connection failed: " . $conn->connect_error);
-                    }
-
-                    // Initialize search variable
-                    $search_patient_id = "";
-
-                    // Check if search form is submitted
-                    if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET["patient_id"])) {
-                        $search_patient_id = $_GET["patient_id"];
-                    }
-
-                    // Fetch data from the database
-                    $sql = "SELECT * FROM hotel_bookings";
-
-                    // If search query is provided, add WHERE clause
-                    if (!empty($search_patient_id)) {
-                        $sql .= " WHERE patient_id = '$search_patient_id'";
-                    }
-
-                    $result = $conn->query($sql);
-
-                    if ($result->num_rows > 0) {
+                    if ($result && $result->num_rows > 0) {
                         while ($row = $result->fetch_assoc()) {
-                            echo "<tr>";
-                            echo "<td>".$row['patient_id']."</td>";
-                            echo "<td>".$row['hotel_name']."</td>";
-                            echo "<td>".$row['checkin_date']."</td>";
-                            echo "<td>".$row['checkin_time']."</td>";
-                            echo "<td>".$row['checkout_date']."</td>";
-                            echo "<td>".$row['num_guests']."</td>";
-                            echo "<td>".$row['room_type']."</td>";
-                            echo "<td><button class='update-button' onclick='updateBooking(".$row['id'].")'>Update</button></td>";
+                            $s = strtolower($row['status'] ?? 'pending');
+                            $badge = $statusColors[$s] ?? 'bg-slate-100 text-slate-600';
+                            echo "<tr class='hover:bg-slate-50 transition'>";
+                            echo "<td class='px-4 py-3 font-mono text-slate-500'>#{$row['id']}</td>";
+                            echo "<td class='px-4 py-3'>{$row['patient_id']}</td>";
+                            echo "<td class='px-4 py-3 font-medium'>".htmlspecialchars($row['hotel_name'])."</td>";
+                            echo "<td class='px-4 py-3 text-slate-500'>{$row['checkin_date']}</td>";
+                            echo "<td class='px-4 py-3 text-slate-500'>{$row['checkout_date']}</td>";
+                            echo "<td class='px-4 py-3'>{$row['num_guests']}</td>";
+                            echo "<td class='px-4 py-3'>".htmlspecialchars($row['room_type'])."</td>";
+                            echo "<td class='px-4 py-3'><span class='inline-block $badge text-xs font-semibold px-2.5 py-1 rounded-full'>".ucfirst($s)."</span></td>";
+                            echo "<td class='px-4 py-3'><button onclick=\"location.href='update.php?id={$row['id']}&type=hotel'\" class='bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition'>Update</button></td>";
                             echo "</tr>";
                         }
                     } else {
-                        echo "<tr><td colspan='8'>No hotel bookings found</td></tr>";
+                        echo "<tr><td colspan='9' class='px-4 py-8 text-center text-slate-400'>No hotel bookings found.</td></tr>";
                     }
-
                     $conn->close();
                     ?>
                 </tbody>
             </table>
         </div>
     </div>
+</main>
 
-    <script>
-        function updateBooking(id) {
-            // Redirect to the update page with the ID
-            window.location.href = "update_hotel_booking.php?id=" + id;
-        }
-    </script>
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-10">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services Administration. All rights reserved.</p>
+</footer>
 </body>
 </html>

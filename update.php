@@ -1,324 +1,189 @@
 <?php
 session_start();
-
-// Check if admin is logged in
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header("Location: login_admin.php");
-    exit();
+if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'admin') {
+    header("Location: login_admin.php"); exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "mt_db";
+$conn = new mysqli("localhost","root","","mt_db");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+$id   = isset($_GET['id'])   ? intval($_GET['id'])   : 0;
+$type = isset($_GET['type']) ? $_GET['type']          : '';
+$record = []; $error = "";
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$type = isset($_GET['type']) ? $_GET['type'] : '';
-$record = [];
-$error = "";
-
-// Fetch record based on type
 if ($type === 'hospital' && $id > 0) {
-    $sql = "SELECT a.id, a.patient_id, a.doctor_id, a.hospital_id, a.appointment_date, a.status, u.name as patient_name
-            FROM appointments a
-            JOIN patients p ON a.patient_id = p.id
-            JOIN users u ON p.user_id = u.id
-            WHERE a.id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $record = $result->fetch_assoc();
-    } else {
-        $error = "Appointment not found";
-    }
+    $stmt = $conn->prepare("SELECT a.id,a.patient_id,a.doctor_id,a.hospital_id,a.appointment_date,a.status,u.name as patient_name FROM appointments a JOIN patients p ON a.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE a.id=?");
+    $stmt->bind_param("i",$id); $stmt->execute(); $result = $stmt->get_result();
+    if ($result->num_rows > 0) $record = $result->fetch_assoc(); else $error = "Appointment not found.";
     $stmt->close();
 } elseif ($type === 'hotel' && $id > 0) {
-    $sql = "SELECT h.id, h.patient_id, h.hotel_name, h.checkin_date, h.checkout_date, h.num_guests, h.room_type, h.status, u.name as patient_name
-            FROM hotel_bookings h
-            JOIN patients p ON h.patient_id = p.id
-            JOIN users u ON p.user_id = u.id
-            WHERE h.id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $record = $result->fetch_assoc();
-    } else {
-        $error = "Hotel booking not found";
-    }
+    $stmt = $conn->prepare("SELECT h.*,u.name as patient_name FROM hotel_bookings h JOIN patients p ON h.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE h.id=?");
+    $stmt->bind_param("i",$id); $stmt->execute(); $result = $stmt->get_result();
+    if ($result->num_rows > 0) $record = $result->fetch_assoc(); else $error = "Hotel booking not found.";
     $stmt->close();
 } elseif ($type === 'transport' && $id > 0) {
-    $sql = "SELECT t.id, t.patient_id, t.transport_type, t.pickup_location, t.destination, t.date, t.time, t.status, u.name as patient_name
-            FROM transport_bookings t
-            JOIN patients p ON t.patient_id = p.id
-            JOIN users u ON p.user_id = u.id
-            WHERE t.id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $record = $result->fetch_assoc();
-    } else {
-        $error = "Transport booking not found";
-    }
+    $stmt = $conn->prepare("SELECT t.*,u.name as patient_name FROM transport_bookings t JOIN patients p ON t.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE t.id=?");
+    $stmt->bind_param("i",$id); $stmt->execute(); $result = $stmt->get_result();
+    if ($result->num_rows > 0) $record = $result->fetch_assoc(); else $error = "Transport booking not found.";
     $stmt->close();
 } elseif ($type === 'visa' && $id > 0) {
-    $sql = "SELECT v.id, v.patient_id, v.visa_type, v.country, v.passport_number, v.application_date, v.status, u.name as patient_name
-            FROM visa_bookings v
-            JOIN patients p ON v.patient_id = p.id
-            JOIN users u ON p.user_id = u.id
-            WHERE v.id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $record = $result->fetch_assoc();
-    } else {
-        $error = "Visa booking not found";
-    }
+    $stmt = $conn->prepare("SELECT v.*,u.name as patient_name FROM visa_bookings v JOIN patients p ON v.patient_id=p.id JOIN users u ON p.user_id=u.id WHERE v.id=?");
+    $stmt->bind_param("i",$id); $stmt->execute(); $result = $stmt->get_result();
+    if ($result->num_rows > 0) $record = $result->fetch_assoc(); else $error = "Visa application not found.";
     $stmt->close();
-} else {
-    $error = "Invalid type or ID parameter";
-}
-
+} else { $error = "Invalid type or ID."; }
 $conn->close();
+
+$typeLabels = ['hospital'=>'Hospital Appointment','hotel'=>'Hotel Booking','transport'=>'Transport Booking','visa'=>'Visa Application'];
+$typeIcons  = ['hospital'=>'🏥','hotel'=>'🏨','transport'=>'🚗','visa'=>'📄'];
+$backLinks  = ['hospital'=>'view_admin_hospital.php','hotel'=>'view_admin_hotel.php','transport'=>'view_admin_transport.php','visa'=>'view_admin_visa.php'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Booking - Medical Tourism Service</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            max-width: 600px;
-        }
-        .form-container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .form-group input:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
-        .submit-button, .back-button {
-            flex: 1;
-            padding: 12px 20px;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .submit-button:hover {
-            background-color: #555;
-        }
-        .back-button {
-            background-color: #666;
-        }
-        .back-button:hover {
-            background-color: #888;
-        }
-        .error {
-            color: red;
-            padding: 15px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Booking – Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="welcome_admin.php">Dashboard</a></li>
-                <li><a href="logout_admin.php">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <div class="container">
-        <div class="form-container">
-            <h2>Update Booking</h2>
-            
-            <?php if ($error): ?>
-                <div class="error"><?php echo htmlspecialchars($error); ?></div>
-            <?php elseif ($record): ?>
-                <form action="update_process.php" method="POST">
-                    <input type="hidden" name="id" value="<?php echo $record['id']; ?>">
-                    <input type="hidden" name="type" value="<?php echo $type; ?>">
-                    
-                    <div class="form-group">
-                        <label>Patient Name:</label>
-                        <input type="text" value="<?php echo htmlspecialchars($record['patient_name']); ?>" disabled>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="status">Status:</label>
-                        <select id="status" name="status" required>
-                            <option value="pending" <?php if($record['status'] == 'pending') echo 'selected'; ?>>Pending</option>
-                            <option value="approved" <?php if($record['status'] == 'approved') echo 'selected'; ?>>Approved</option>
-                            <option value="completed" <?php if($record['status'] == 'completed') echo 'selected'; ?>>Completed</option>
-                            <option value="cancelled" <?php if($record['status'] == 'cancelled') echo 'selected'; ?>>Cancelled</option>
-                        </select>
-                    </div>
-
-                    <?php if ($type === 'hospital'): ?>
-                        <div class="form-group">
-                            <label>Appointment Date:</label>
-                            <input type="date" value="<?php echo $record['appointment_date']; ?>" disabled>
-                        </div>
-                    <?php elseif ($type === 'hotel'): ?>
-                        <div class="form-group">
-                            <label for="hotel_name">Hotel Name:</label>
-                            <input type="text" id="hotel_name" name="hotel_name" value="<?php echo htmlspecialchars($record['hotel_name']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Check-in Date:</label>
-                            <input type="date" value="<?php echo $record['checkin_date']; ?>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>Check-out Date:</label>
-                            <input type="date" value="<?php echo $record['checkout_date']; ?>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="room_type">Room Type:</label>
-                            <select id="room_type" name="room_type" required>
-                                <option value="Single" <?php if($record['room_type'] == 'Single') echo 'selected'; ?>>Single</option>
-                                <option value="Double" <?php if($record['room_type'] == 'Double') echo 'selected'; ?>>Double</option>
-                                <option value="Suite" <?php if($record['room_type'] == 'Suite') echo 'selected'; ?>>Suite</option>
-                            </select>
-                        </div>
-                    <?php elseif ($type === 'transport'): ?>
-                        <div class="form-group">
-                            <label for="transport_type">Transport Type:</label>
-                            <select id="transport_type" name="transport_type" required>
-                                <option value="Taxi" <?php if($record['transport_type'] == 'Taxi') echo 'selected'; ?>>Taxi</option>
-                                <option value="Bus" <?php if($record['transport_type'] == 'Bus') echo 'selected'; ?>>Bus</option>
-                                <option value="Train" <?php if($record['transport_type'] == 'Train') echo 'selected'; ?>>Train</option>
-                                <option value="Ambulance" <?php if($record['transport_type'] == 'Ambulance') echo 'selected'; ?>>Ambulance</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="pickup_location">Pickup Location:</label>
-                            <input type="text" id="pickup_location" name="pickup_location" value="<?php echo htmlspecialchars($record['pickup_location']); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="destination">Destination:</label>
-                            <input type="text" id="destination" name="destination" value="<?php echo htmlspecialchars($record['destination']); ?>" required>
-                        </div>
-                    <?php elseif ($type === 'visa'): ?>
-                        <div class="form-group">
-                            <label>Country:</label>
-                            <input type="text" value="<?php echo htmlspecialchars($record['country']); ?>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>Passport Number:</label>
-                            <input type="text" value="<?php echo htmlspecialchars($record['passport_number']); ?>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label>Application Date:</label>
-                            <input type="date" value="<?php echo $record['application_date']; ?>" disabled>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="button-group">
-                        <button type="submit" class="submit-button">Update Status</button>
-                        <button type="button" class="back-button" onclick="goBack()">Cancel</button>
-                    </div>
-                </form>
-            <?php endif; ?>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-indigo-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="welcome_admin.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-indigo-300">Admin</span></span>
+        </a>
+        <div class="flex items-center gap-4">
+            <a href="welcome_admin.php"  class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="logout_admin.php"   class="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
         </div>
     </div>
+</header>
 
-    <script>
-        function goBack() {
-            window.history.back();
-        }
-    </script>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <?php if ($error): ?>
+    <div class="bg-rose-50 border border-rose-300 text-rose-800 rounded-2xl p-6 text-center">
+        <div class="text-4xl mb-3">❌</div>
+        <p class="font-semibold"><?php echo htmlspecialchars($error); ?></p>
+        <a href="welcome_admin.php" class="text-indigo-600 hover:underline text-sm mt-3 inline-block">← Back to Dashboard</a>
+    </div>
+    <?php elseif ($record): ?>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-slate-800 p-7 text-white">
+            <div class="text-3xl mb-2"><?php echo $typeIcons[$type] ?? '📋'; ?></div>
+            <h1 class="text-2xl font-bold">Update <?php echo $typeLabels[$type] ?? 'Booking'; ?></h1>
+            <p class="text-indigo-200 text-sm mt-1">Record #<?php echo $record['id']; ?> · Patient: <?php echo htmlspecialchars($record['patient_name']); ?></p>
+        </div>
+
+        <div class="p-7">
+            <form action="update_process.php" method="POST" class="space-y-5">
+                <input type="hidden" name="id"   value="<?php echo $record['id']; ?>">
+                <input type="hidden" name="type" value="<?php echo $type; ?>">
+
+                <!-- Readonly patient info -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Patient Name</label>
+                    <input type="text" value="<?php echo htmlspecialchars($record['patient_name']); ?>" disabled
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                </div>
+
+                <!-- Status always editable -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Status *</label>
+                    <select name="status" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                        <?php foreach (['pending','approved','completed','cancelled'] as $s): ?>
+                        <option value="<?php echo $s; ?>" <?php if(($record['status']??'') == $s) echo 'selected'; ?>><?php echo ucfirst($s); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Type-specific fields -->
+                <?php if ($type === 'hospital'): ?>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Appointment Date</label>
+                    <input type="date" value="<?php echo $record['appointment_date']; ?>" disabled
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                </div>
+                <?php elseif ($type === 'hotel'): ?>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Hotel Name</label>
+                    <input type="text" name="hotel_name" value="<?php echo htmlspecialchars($record['hotel_name']); ?>" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Check-in</label>
+                        <input type="date" value="<?php echo $record['checkin_date']; ?>" disabled
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Check-out</label>
+                        <input type="date" value="<?php echo $record['checkout_date']; ?>" disabled
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Room Type</label>
+                    <select name="room_type" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                        <?php foreach (['Single','Double','Suite'] as $r): ?>
+                        <option value="<?php echo $r; ?>" <?php if($record['room_type']==$r) echo 'selected'; ?>><?php echo $r; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php elseif ($type === 'transport'): ?>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Transport Type</label>
+                    <select name="transport_type" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                        <?php foreach (['Taxi','Bus','Train','Private Car','Ambulance'] as $t): ?>
+                        <option value="<?php echo $t; ?>" <?php if($record['transport_type']==$t) echo 'selected'; ?>><?php echo $t; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Pickup Location</label>
+                    <input type="text" name="pickup_location" value="<?php echo htmlspecialchars($record['pickup_location']); ?>" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Destination</label>
+                    <input type="text" name="destination" value="<?php echo htmlspecialchars($record['destination']); ?>" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition bg-white">
+                </div>
+                <?php elseif ($type === 'visa'): ?>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Country</label>
+                        <input type="text" value="<?php echo htmlspecialchars($record['country']); ?>" disabled
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Passport No.</label>
+                        <input type="text" value="<?php echo htmlspecialchars($record['passport_number']); ?>" disabled
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 text-slate-400 cursor-not-allowed">
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                        ✅ Update Booking
+                    </button>
+                    <a href="<?php echo $backLinks[$type] ?? 'welcome_admin.php'; ?>" class="flex-1 text-center border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 rounded-xl transition">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+</main>
+
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-10">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services Administration. All rights reserved.</p>
+</footer>
 </body>
 </html>

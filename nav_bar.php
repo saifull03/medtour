@@ -1,6 +1,6 @@
 <nav>
     <ul>
-         <li><a href="dashboard.php">Home</a></li>
+         <li><a href="index.php">Home</a></li>
     
             <li><a href="login_admin.php">Admin</a></li>
             <li><a href="login_user.php">User</a></li>

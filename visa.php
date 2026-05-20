@@ -1,110 +1,72 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visa Assistance - Medical Tourism Service</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('visa.png');
-            background-size: cover;
-            background-position: center;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            text-align: center;
-        }
-        .service-info {
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        .book-button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: #fff;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            display: inline-block;
-        }
-        .book-button:hover {
-            background-color: #555;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Assistance – Medical Tourism Service</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                <li><a href="login_admin.php">Admin</a></li>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="help.php">Help</a></li>
-            </ul>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-violet-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="index.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-violet-300">Services</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6">
+            <a href="index.php"    class="text-slate-300 hover:text-white text-sm font-medium transition">Home</a>
+            <a href="services.php" class="text-slate-300 hover:text-white text-sm font-medium transition">Services</a>
+            <a href="help.php"     class="text-slate-300 hover:text-white text-sm font-medium transition">Help</a>
+            <?php if(isset($_SESSION['user_id'])): ?><a href="welcome.php" class="text-slate-300 hover:text-white text-sm font-medium transition">Dashboard</a><?php endif; ?>
         </nav>
-    </header>
+        <?php if(isset($_SESSION['user_id'])): ?>
+        <a href="logout_user.php" class="bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
+        <?php else: ?>
+        <a href="login_user.php" class="bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Login</a>
+        <?php endif; ?>
+    </div>
+</header>
 
-    <div class="container">
-        <div class="service-info">
-            <h2>Visa Assistance</h2>
-            <p>Get assistance with your visa application process through our visa assistance service. Our experts will guide you through the required documentation and procedures for a hassle-free experience.</p>
-            <?php
-            session_start();
-            if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'patient') {
-                echo "<a href='submit_visa.php' class='book-button'>Apply Now</a>";
-            } else {
-                echo "<p><a href='login_user.php' class='book-button'>Login to Apply</a></p>";
-            }
-            ?>
+<div class="relative bg-violet-700 text-white py-16 text-center overflow-hidden">
+    <div class="absolute inset-0 bg-[url('visa.png')] bg-cover bg-center opacity-20"></div>
+    <div class="relative z-10 max-w-2xl mx-auto px-4">
+        <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">📄</div>
+        <h1 class="text-4xl font-bold mb-2">Visa Assistance</h1>
+        <p class="text-violet-100">Hassle-free medical visa applications with expert guidance</p>
+    </div>
+</div>
+
+<main class="max-w-3xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <h2 class="text-2xl font-bold text-slate-800 mb-3">Apply for Visa Assistance</h2>
+        <p class="text-slate-500 mb-8 leading-relaxed">Get expert assistance with your visa application process. Our specialists guide you through required documentation and procedures for a smooth, hassle-free experience.</p>
+
+        <?php if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'patient'): ?>
+            <a href="submit_visa.php" class="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-bold px-8 py-4 rounded-xl transition shadow-lg hover:shadow-violet-300/40 text-lg">
+                <span>📄</span> Apply Now
+            </a>
+        <?php else: ?>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-amber-800 mb-6">
+                <p class="font-semibold mb-1">⚠️ Login Required</p>
+                <p class="text-sm">You need to be logged in as a patient to apply for visa assistance.</p>
+            </div>
+            <a href="login_user.php" class="inline-flex items-center gap-2 bg-violet-500 hover:bg-violet-600 text-white font-bold px-8 py-4 rounded-xl transition">
+                🔑 Login to Apply
+            </a>
+        <?php endif; ?>
+
+        <div class="mt-10 pt-8 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="text-center p-4 bg-violet-50 rounded-xl"><div class="text-2xl mb-2">🌍</div><div class="font-semibold text-slate-700 text-sm">30+ Countries</div></div>
+            <div class="text-center p-4 bg-violet-50 rounded-xl"><div class="text-2xl mb-2">⚡</div><div class="font-semibold text-slate-700 text-sm">Fast Processing</div></div>
+            <div class="text-center p-4 bg-violet-50 rounded-xl"><div class="text-2xl mb-2">🤝</div><div class="font-semibold text-slate-700 text-sm">Expert Support</div></div>
         </div>
     </div>
-</body>
-</html>
-        </div>
-    </div>
+</main>
+
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-10">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services. All rights reserved.</p>
+</footer>
 </body>
 </html>

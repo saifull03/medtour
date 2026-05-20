@@ -1,225 +1,101 @@
 <?php
-// Check admin session
 session_start();
 if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'admin') {
-    header("Location: login_admin.php");
-    exit();
+    header("Location: login_admin.php"); exit();
 }
+$conn = new mysqli("localhost","root","","mt_db");
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+$search = isset($_GET['search_patient_id']) ? $_GET['search_patient_id'] : '';
+$sql = "SELECT * FROM visa_bookings";
+if (!empty($search)) $sql .= " WHERE patient_id LIKE '%" . $conn->real_escape_string($search) . "%'";
+$sql .= " ORDER BY id DESC";
+$result = $conn->query($sql);
+
+$statusColors = ['pending'=>'bg-amber-100 text-amber-700','approved'=>'bg-emerald-100 text-emerald-700','rejected'=>'bg-rose-100 text-rose-700'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visa Applications - Medical Tourism Service</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('visa.png');
-            background-size: cover;
-            background-position: center;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 90%;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 5px;
-        }
-        .table-container {
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table th, table td {
-            padding: 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        table th {
-            background-color: #333;
-            color: white;
-        }
-        table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        table tr:hover {
-            background-color: #f0f0f0;
-        }
-        .search-form {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f4f4f4;
-            border-radius: 5px;
-        }
-        .search-form input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-            margin-right: 10px;
-        }
-        .search-form button {
-            padding: 8px 16px;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .search-form button:hover {
-            background-color: #555;
-        }
-        .update-button {
-            padding: 6px 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            cursor: pointer;
-            display: inline-block;
-        }
-        .update-button:hover {
-            background-color: #45a049;
-        }
-        .status-pending {
-            color: #ff9800;
-            font-weight: bold;
-        }
-        .status-approved {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .status-rejected {
-            color: #f44336;
-            font-weight: bold;
-        }
-        h2 {
-            color: #333;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Applications – Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="welcome_admin.php">Dashboard</a></li>
-                <li><a href="logout_admin.php">Logout</a></li>
-            </ul>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-indigo-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="welcome_admin.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-indigo-300">Admin</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-5">
+            <a href="welcome_admin.php"        class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="view_admin_transport.php"  class="text-slate-300 hover:text-white text-sm transition">Transport</a>
+            <a href="view_admin_visa.php"       class="text-indigo-300 text-sm font-semibold">Visa</a>
+            <a href="view_admin_hospital.php"   class="text-slate-300 hover:text-white text-sm transition">Hospital</a>
+            <a href="view_admin_hotel.php"      class="text-slate-300 hover:text-white text-sm transition">Hotel</a>
         </nav>
-    </header>
+        <a href="logout_admin.php" class="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
+    </div>
+</header>
 
-    <div class="container">
-        <h2>Visa Applications</h2>
-        <div class="search-form">
-            <form method="GET">
-                <label for="search_patient_id">Search Patient ID:</label>
-                <input type="text" id="search_patient_id" name="search_patient_id" placeholder="Enter patient ID" value="<?php echo isset($_GET['search_patient_id']) ? htmlspecialchars($_GET['search_patient_id']) : ''; ?>">
-                <button type="submit">Search</button>
-                <a href="view_admin_visa.php" style="margin-left: 10px; padding: 8px 16px; background-color: #666; color: white; text-decoration: none; border-radius: 5px;">Clear</a>
-            </form>
+<main class="max-w-7xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">📄 Visa Applications</h1>
+            <p class="text-slate-500 text-sm">Review and manage all patient visa assistance requests</p>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
+        <a href="welcome_admin.php" class="text-slate-500 hover:text-slate-800 text-sm transition">← Back to Dashboard</a>
+    </div>
+
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+        <form method="GET" class="flex items-center gap-3">
+            <input type="text" name="search_patient_id" placeholder="Search by Patient ID…"
+                value="<?php echo htmlspecialchars($search); ?>"
+                class="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 w-56">
+            <button type="submit" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">🔍 Search</button>
+            <?php if (!empty($search)): ?><a href="view_admin_visa.php" class="text-slate-500 hover:text-slate-800 text-sm transition">Clear</a><?php endif; ?>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-800 text-white">
                     <tr>
-                        <th>ID</th>
-                        <th>Patient ID</th>
-                        <th>Visa Type</th>
-                        <th>Country</th>
-                        <th>Passport Number</th>
-                        <th>Application Date</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                        <th>Action</th>
+                        <th class="px-4 py-3 text-left font-semibold">ID</th>
+                        <th class="px-4 py-3 text-left font-semibold">Patient ID</th>
+                        <th class="px-4 py-3 text-left font-semibold">Visa Type</th>
+                        <th class="px-4 py-3 text-left font-semibold">Country</th>
+                        <th class="px-4 py-3 text-left font-semibold">Passport No.</th>
+                        <th class="px-4 py-3 text-left font-semibold">App. Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Submitted</th>
+                        <th class="px-4 py-3 text-left font-semibold">Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100">
                     <?php
-                    // Connect to the database
-                    $servername = "localhost";
-                    $username = "root";
-                    $password = "";
-                    $dbname = "mt_db";
-
-                    $conn = new mysqli($servername, $username, $password, $dbname);
-
-                    if ($conn->connect_error) {
-                        die("Connection failed: " . $conn->connect_error);
-                    }
-
-                    // Search for specific patient ID if provided
-                    $search_patient_id = isset($_GET['search_patient_id']) ? $_GET['search_patient_id'] : '';
-                    $sql = "SELECT * FROM visa_bookings";
-                    if (!empty($search_patient_id)) {
-                        $sql .= " WHERE patient_id LIKE '%" . $conn->real_escape_string($search_patient_id) . "%'";
-                    }
-                    $sql .= " ORDER BY id DESC";
-                    
-                    $result = $conn->query($sql);
-
-                    if ($result->num_rows > 0) {
-                        // Output data of each row
-                        while($row = $result->fetch_assoc()) {
-                            $status_class = "status-" . strtolower($row["status"]);
-                            echo "<tr>";
-                            echo "<td>" . $row["id"] . "</td>";
-                            echo "<td>" . $row["patient_id"] . "</td>";
-                            echo "<td>" . htmlspecialchars($row["visa_type"]) . "</td>";
-                            echo "<td>" . htmlspecialchars($row["country"]) . "</td>";
-                            echo "<td>" . htmlspecialchars($row["passport_number"]) . "</td>";
-                            echo "<td>" . $row["application_date"] . "</td>";
-                            echo "<td class='" . $status_class . "'>" . ucfirst($row["status"]) . "</td>";
-                            echo "<td>" . $row["created_at"] . "</td>";
-                            echo "<td><a class='update-button' href='update.php?id=" . $row["id"] . "&type=visa'>Update</a></td>";
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            $s = strtolower($row['status'] ?? 'pending');
+                            $badge = $statusColors[$s] ?? 'bg-slate-100 text-slate-600';
+                            echo "<tr class='hover:bg-slate-50 transition'>";
+                            echo "<td class='px-4 py-3 font-mono text-slate-500'>#{$row['id']}</td>";
+                            echo "<td class='px-4 py-3'>{$row['patient_id']}</td>";
+                            echo "<td class='px-4 py-3 font-medium'>".htmlspecialchars($row['visa_type'])."</td>";
+                            echo "<td class='px-4 py-3'>".htmlspecialchars($row['country'])."</td>";
+                            echo "<td class='px-4 py-3 font-mono text-slate-600'>".htmlspecialchars($row['passport_number'])."</td>";
+                            echo "<td class='px-4 py-3 text-slate-500'>{$row['application_date']}</td>";
+                            echo "<td class='px-4 py-3'><span class='inline-block $badge text-xs font-semibold px-2.5 py-1 rounded-full'>".ucfirst($s)."</span></td>";
+                            echo "<td class='px-4 py-3 text-slate-400 text-xs'>".($row['created_at'] ?? '—')."</td>";
+                            echo "<td class='px-4 py-3'><a href='update.php?id={$row['id']}&type=visa' class='bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition inline-block'>Update</a></td>";
                             echo "</tr>";
                         }
                     } else {
-                        echo "<tr><td colspan='9' style='text-align: center; padding: 20px;'>No visa applications found</td></tr>";
+                        echo "<tr><td colspan='9' class='px-4 py-8 text-center text-slate-400'>No visa applications found.</td></tr>";
                     }
                     $conn->close();
                     ?>
@@ -227,5 +103,10 @@ if (!isset($_SESSION['admin_id']) || $_SESSION['admin_role'] !== 'admin') {
             </table>
         </div>
     </div>
+</main>
+
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-10">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services Administration. All rights reserved.</p>
+</footer>
 </body>
 </html>

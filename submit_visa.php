@@ -1,214 +1,126 @@
 <?php
 session_start();
-
-// Check if user is logged in and is a patient
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
-    header("Location: login_user.php");
-    exit();
+    header("Location: login_user.php"); exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "mt_db";
+$conn = new mysqli('localhost','root','','mt_db');
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Get patient_id from patients table
 $user_id = $_SESSION['user_id'];
-$patient_query = "SELECT id FROM patients WHERE user_id = ?";
-$stmt = $conn->prepare($patient_query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$patient_result = $stmt->get_result();
+$pr = $conn->query("SELECT id FROM patients WHERE user_id=?");
+$stmt = $conn->prepare("SELECT id FROM patients WHERE user_id=?");
+$stmt->bind_param("i",$user_id); $stmt->execute();
+$pr = $stmt->get_result();
+if ($pr->num_rows === 0) {
+    $stmt2 = $conn->prepare("INSERT INTO patients (user_id,phone,country,passport_no) VALUES (?,NULL,NULL,NULL)");
+    $stmt2->bind_param("i",$user_id); $stmt2->execute(); $patient_id = $conn->insert_id; $stmt2->close();
+} else { $patient_id = $pr->fetch_assoc()['id']; }
+$stmt->close();
 
-if ($patient_result->num_rows === 0) {
-    // Create patient record if doesn't exist
-    $insert_patient = "INSERT INTO patients (user_id, phone, country, passport_no) VALUES (?, NULL, NULL, NULL)";
-    $stmt = $conn->prepare($insert_patient);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $patient_id = $conn->insert_id;
-    $stmt->close();
-} else {
-    $patient_row = $patient_result->fetch_assoc();
-    $patient_id = $patient_row['id'];
-}
-
-// Handle form submission
-$message = "";
+$message = ""; $msg_type = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($_POST['visa_type']) && !empty($_POST['country']) && !empty($_POST['passport_number']) && !empty($_POST['application_date'])) {
-        
-        $visa_type = $_POST['visa_type'];
-        $country = $_POST['country'];
-        $passport_number = $_POST['passport_number'];
-        $application_date = $_POST['application_date'];
-        
-        // Insert visa booking into visa_bookings table
-        $insert_sql = "INSERT INTO visa_bookings (patient_id, visa_type, country, passport_number, application_date, status) VALUES (?, ?, ?, ?, ?, 'pending')";
-        $stmt = $conn->prepare($insert_sql);
-        $stmt->bind_param("issss", $patient_id, $visa_type, $country, $passport_number, $application_date);
-        
-        if ($stmt->execute()) {
-            $message = "<p style='color: green; font-size: 18px; font-weight: bold;'>Visa application submitted successfully! We have sent confirmation to your email.</p>";
-        } else {
-            $message = "<p style='color: red; font-size: 18px;'>Error submitting application: " . $stmt->error . "</p>";
-        }
+        $stmt = $conn->prepare("INSERT INTO visa_bookings (patient_id,visa_type,country,passport_number,application_date,status) VALUES (?,?,?,?,?,'pending')");
+        $stmt->bind_param("issss",$patient_id,$_POST['visa_type'],$_POST['country'],$_POST['passport_number'],$_POST['application_date']);
+        if ($stmt->execute()) { $message = "✅ Visa application submitted successfully! We'll contact you soon."; $msg_type = "success"; }
+        else { $message = "❌ Error: ".$stmt->error; $msg_type = "error"; }
         $stmt->close();
-    } else {
-        $message = "<p style='color: red; font-size: 18px;'>All fields are required!</p>";
-    }
+    } else { $message = "❌ All fields are required."; $msg_type = "error"; }
 }
-
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visa Assistance Form - Medical Tourism Service</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('visa.png');
-            background-size: cover;
-            background-position: center;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            text-align: center;
-        }
-        .form-container {
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .form-group input[type="text"],
-        .form-group input[type="date"],
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .submit-button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: #fff;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .submit-button:hover {
-            background-color: #555;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visa Application – MedTour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                <li><a href="login_admin.php">Admin</a></li>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="help.php">Help</a></li>
-            </ul>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-violet-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="index.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-violet-300">Visa</span></span>
+        </a>
+        <nav class="flex items-center gap-5">
+            <a href="welcome.php"     class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="logout_user.php" class="bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
         </nav>
-    </header>
+    </div>
+</header>
 
-    <div class="container">
-        <div class="form-container">
-            <h2>Visa Assistance Form</h2>
-            <?php echo $message; ?>
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
-                <div class="form-group">
-                    <label for="user_id">User ID:</label>
-                    <input type="text" id="user_id" name="user_id" value="<?php echo $_SESSION['user_id']; ?>" readonly>
-                    <input type="hidden" id="patient_id" name="patient_id" value="<?php echo $patient_id; ?>"
-                </div>
-                <div class="form-group">
-                    <label for="visa_type">Visa Type:</label>
-                    <select id="visa_type" name="visa_type" required>
-                        <option value="">Select Visa Type</option>
-                        <option value="Tourist">Tourist</option>
-                        <option value="Business">Business</option>
-                        <option value="Medical">Medical</option>
-                        <option value="Student">Student</option>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-violet-600 to-purple-700 p-7 text-white">
+            <div class="text-3xl mb-2">📄</div>
+            <h1 class="text-2xl font-bold">Visa Assistance Application</h1>
+            <p class="text-violet-100 text-sm mt-1">Submit your visa request and our experts will guide you through the process</p>
+        </div>
+
+        <div class="p-7">
+            <?php if (!empty($message)): ?>
+            <div class="<?php echo $msg_type==='success' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-rose-50 border-rose-300 text-rose-800'; ?> border rounded-xl px-4 py-3 mb-6 text-sm font-medium">
+                <?php echo $message; ?>
+                <?php if ($msg_type==='success'): ?><br><a href="welcome.php" class="underline mt-1 inline-block">← Back to Dashboard</a><?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" class="space-y-5">
+                <input type="hidden" name="patient_id" value="<?php echo $patient_id; ?>">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Visa Type *</label>
+                    <select name="visa_type" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 transition bg-white">
+                        <option value="">— Select visa type —</option>
+                        <option value="Tourist">🌍 Tourist</option>
+                        <option value="Business">💼 Business</option>
+                        <option value="Medical">🏥 Medical</option>
+                        <option value="Student">🎓 Student</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="country">Destination Country:</label>
-                    <input type="text" id="country" name="country" placeholder="e.g., Thailand, Turkey" required>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Destination Country *</label>
+                    <input type="text" name="country" placeholder="e.g., Thailand, Turkey, India" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 transition bg-white">
                 </div>
-                <div class="form-group">
-                    <label for="passport_number">Passport Number:</label>
-                    <input type="text" id="passport_number" name="passport_number" placeholder="Enter your passport number" required>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Passport Number *</label>
+                    <input type="text" name="passport_number" placeholder="e.g., A12345678" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 transition bg-white">
                 </div>
-                <div class="form-group">
-                    <label for="application_date">Application Date:</label>
-                    <input type="date" id="application_date" name="application_date" required>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Application Date *</label>
+                    <input type="date" name="application_date" required min="<?php echo date('Y-m-d'); ?>"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400 transition bg-white">
                 </div>
-                <button type="submit" class="submit-button">Submit Visa Application</button>
+
+                <div class="bg-violet-50 border border-violet-200 rounded-xl p-4 text-violet-700 text-xs">
+                    <strong>ℹ️ Note:</strong> After submission, our visa specialists will review your application and contact you within 2-3 business days with further instructions.
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 bg-violet-500 hover:bg-violet-600 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                        📄 Submit Application
+                    </button>
+                    <a href="welcome.php" class="flex-1 text-center border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 rounded-xl transition">
+                        Cancel
+                    </a>
+                </div>
             </form>
         </div>
     </div>
+</main>
+
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-6">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services. All rights reserved.</p>
+</footer>
 </body>
 </html>
-<?php $conn->close(); ?>

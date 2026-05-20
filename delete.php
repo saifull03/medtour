@@ -1,3 +1,14 @@
+<?php
+// Check admin or patient session
+session_start();
+$is_admin = isset($_SESSION['admin_id']) && $_SESSION['admin_role'] === 'admin';
+$is_patient = isset($_SESSION['user_id']) && $_SESSION['role'] === 'patient';
+
+if (!$is_admin && !$is_patient) {
+    header("Location: login_user.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,6 +21,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f9f9f9;
         }
 
         header {
@@ -47,11 +59,15 @@
         .container {
             margin: 50px auto;
             width: 80%;
+            max-width: 600px;
         }
         .message {
-            background-color: #f4f4f4;
-            padding: 20px;
+            background-color: #fff;
+            padding: 30px;
             border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            font-size: 18px;
         }
         .back-button {
             margin-top: 20px;
@@ -61,6 +77,7 @@
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
         .back-button:hover {
             background-color: #555;
@@ -77,7 +94,7 @@
         </div>
         <nav>
             <ul>
-                <li><a href="dashboard.php">Home</a></li>
+                <li><a href="index.php">Home</a></li>
                 <li><a href="login_admin.php">Admin</a></li>
                 <li><a href="login_user.php">User</a></li>
                 <li><a href="services.php">Services</a></li>
@@ -103,28 +120,47 @@
                     die("Connection failed: " . $conn->connect_error);
                 }
 
-                // Delete the row based on ID
-                $id = $_GET['id'];
-                $sql = "DELETE FROM transport_bookings WHERE id = $id";
+                $id = intval($_GET['id']);
+                
+                // If patient, make sure they own the booking
+                $allowed = true;
+                if ($is_patient) {
+                    $user_id = $_SESSION['user_id'];
+                    $check_sql = "SELECT tb.id FROM transport_bookings tb 
+                                  JOIN patients p ON tb.patient_id = p.id 
+                                  WHERE tb.id = $id AND p.user_id = $user_id";
+                    $check_res = $conn->query($check_sql);
+                    if ($check_res->num_rows === 0) {
+                        $allowed = false;
+                    }
+                }
 
-                if ($conn->query($sql) === TRUE) {
-                    echo "Booking deleted successfully.";
+                if ($allowed) {
+                    // Delete the row based on ID
+                    $sql = "DELETE FROM transport_bookings WHERE id = $id";
+                    if ($conn->query($sql) === TRUE) {
+                        echo "<span style='color: green;'>✓ Transport booking deleted successfully.</span>";
+                    } else {
+                        echo "<span style='color: red;'>Error deleting booking: " . htmlspecialchars($conn->error) . "</span>";
+                    }
                 } else {
-                    echo "Error deleting booking: " . $conn->error;
+                    echo "<span style='color: red;'>Access denied. You do not own this booking.</span>";
                 }
 
                 $conn->close();
             } else {
-                echo "ID parameter is missing in the URL.";
+                echo "<span style='color: red;'>ID parameter is missing in the URL.</span>";
             }
             ?>
         </div>
-        <button class="back-button" onclick="goBack()">Back</button>
+        <div style="text-align: center;">
+            <button class="back-button" onclick="goBack()">Back to Bookings</button>
+        </div>
     </div>
 
     <script>
         function goBack() {
-            window.location.href = "transport_bookings.php";
+            window.location.href = "<?php echo $is_admin ? 'view_admin_transport.php' : 'transport_bookings.php'; ?>";
         }
     </script>
 </body>

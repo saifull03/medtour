@@ -1,197 +1,100 @@
+<?php
+session_start();
+$conn = new mysqli('localhost','root','','mt_db');
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $sql = "SELECT tb.* FROM transport_bookings tb JOIN patients p ON tb.patient_id = p.id WHERE p.user_id = $user_id ORDER BY tb.id DESC";
+} else {
+    $sql = "SELECT * FROM transport_bookings ORDER BY id DESC";
+}
+$result = $conn->query($sql);
+$statusColors = ['pending'=>'bg-amber-100 text-amber-700','approved'=>'bg-emerald-100 text-emerald-700','completed'=>'bg-sky-100 text-sky-700','cancelled'=>'bg-rose-100 text-rose-700'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transport Bookings - Medical Tourism Service</title>
-    <style>
-        /* Your CSS styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: url('transport_bookings.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #333;
-            color: #fff;
-        }
-        .btn-update, .btn-delete {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .btn-delete {
-            background-color: #f44336;
-        }
-        .print-button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .print-button:hover {
-            background-color: #555;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Transport Bookings – MedTour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}@media print{header,footer,.no-print{display:none;}}</style>
 </head>
-<body>
-    <header>
-        <div class="logo">
-            <img src="logo.png" alt="Medical Tourism Service Logo">
-        </div>
-        <div class="name">
-            <h1>Medical Tourism Service</h1>
-        </div>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                <li><a href="login_admin.php">Admin</a></li>
-                <li><a href="login_user.php">User</a></li>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="help.php">Help</a></li>
-            </ul>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-emerald-900 text-white shadow-lg no-print">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="index.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-emerald-300">Transport</span></span>
+        </a>
+        <nav class="flex items-center gap-5">
+            <a href="welcome.php"          class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="submit_transport.php"  class="text-slate-300 hover:text-white text-sm transition">Book New</a>
+            <a href="logout_user.php"      class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
         </nav>
-    </header>
+    </div>
+</header>
 
-    <div class="container">
-        <h2>Transport Bookings</h2>
-        <table>
-            <tr>
-                <th>Patient ID</th>
-                <th>Transport Type</th>
-                <th>Pickup Location</th>
-                <th>Destination</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Actions</th>
-                <th>Delete</th>
-            </tr>
-            <?php
-            // Retrieve and display the inserted data
-            $servername = "localhost";
-            $username = "root";
-            $password = "";
-            $dbname = "mt_db";
-
-            $conn = new mysqli($servername, $username, $password, $dbname);
-
-            if ($conn->connect_error) {
-                die("Connection failed: " . $conn->connect_error);
-            }
-
-            // Start session to get current user
-            session_start();
-            
-            // Get bookings for current user if logged in, otherwise show all
-            if (isset($_SESSION['user_id'])) {
-                $user_id = $_SESSION['user_id'];
-                $sql = "SELECT tb.* FROM transport_bookings tb 
-                        JOIN patients p ON tb.patient_id = p.id 
-                        WHERE p.user_id = $user_id
-                        ORDER BY tb.id DESC";
-            } else {
-                $sql = "SELECT * FROM transport_bookings ORDER BY id DESC";
-            }
-            $result = $conn->query($sql);
-
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo "<tr>";
-                    echo "<td>" . $row['patient_id'] . "</td>";
-                    echo "<td>" . $row['transport_type'] . "</td>";
-                    echo "<td>" . $row['pickup_location'] . "</td>";
-                    echo "<td>" . $row['destination'] . "</td>";
-                    echo "<td>" . $row['date'] . "</td>";
-                    echo "<td>" . $row['time'] . "</td>";
-                    
-                    echo "<td><button class='btn-update' onclick='updateRow(" . $row['id'] . ")'>Update</button></td>";
-                    echo "<td><button class='btn-delete' onclick='deleteRow(" . $row['id'] . ")'>Delete</button></td?";
-                    
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='7'>No bookings found</td></tr>";
-            }
-            $conn->close();
-            ?>
-        </table>
-        
-        <button class="print-button" onclick="window.print()">Print</button>
+<main class="max-w-7xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">🚗 My Transport Bookings</h1>
+            <p class="text-slate-500 text-sm">All your transport booking history</p>
+        </div>
+        <div class="flex gap-3 no-print">
+            <button onclick="window.print()" class="border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold px-4 py-2 rounded-lg transition">🖨️ Print</button>
+            <a href="submit_transport.php" class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">+ Book New</a>
+        </div>
     </div>
 
-    <script>
-        function updateRow(id) {
-            // Redirect to update page with the ID parameter
-            window.location.href = "update.php?id=" + id;
-        }
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-800 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">ID</th>
+                        <th class="px-4 py-3 text-left font-semibold">Type</th>
+                        <th class="px-4 py-3 text-left font-semibold">Pickup</th>
+                        <th class="px-4 py-3 text-left font-semibold">Destination</th>
+                        <th class="px-4 py-3 text-left font-semibold">Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Time</th>
+                        <th class="px-4 py-3 text-left font-semibold no-print">Update</th>
+                        <th class="px-4 py-3 text-left font-semibold no-print">Delete</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <?php
+                    if ($result && $result->num_rows > 0) {
+                        while ($row = $result->fetch_assoc()) {
+                            echo "<tr class='hover:bg-slate-50 transition'>";
+                            echo "<td class='px-4 py-3 font-mono text-slate-500'>#{$row['id']}</td>";
+                            echo "<td class='px-4 py-3 font-medium'>".htmlspecialchars($row['transport_type'])."</td>";
+                            echo "<td class='px-4 py-3'>".htmlspecialchars($row['pickup_location'])."</td>";
+                            echo "<td class='px-4 py-3'>".htmlspecialchars($row['destination'])."</td>";
+                            echo "<td class='px-4 py-3 text-slate-500'>{$row['date']}</td>";
+                            echo "<td class='px-4 py-3 text-slate-500'>{$row['time']}</td>";
+                            echo "<td class='px-4 py-3 no-print'><button onclick=\"location.href='update.php?id={$row['id']}'\" class='bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition'>Edit</button></td>";
+                            echo "<td class='px-4 py-3 no-print'><button onclick=\"if(confirm('Delete this booking?'))location.href='delete.php?id={$row['id']}'\" class='bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition'>Delete</button></td>";
+                            echo "</tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='8' class='px-4 py-12 text-center text-slate-400'>
+                            <div class='text-4xl mb-3'>🚗</div>
+                            <p class='font-medium text-slate-500'>No transport bookings found.</p>
+                            <a href='submit_transport.php' class='text-emerald-600 hover:underline text-sm'>Book your first transport →</a>
+                        </td></tr>";
+                    }
+                    $conn->close();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
 
-        function deleteRow(id) {
-            // Confirm deletion and then redirect to delete page with the ID parameter
-            if (confirm("Are you sure you want to delete this booking?")) {
-                window.location.href = "delete.php?id=" + id;
-            }
-        }
-    </script>
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-10 no-print">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services. All rights reserved.</p>
+</footer>
 </body>
 </html>

@@ -1,244 +1,144 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
+    header("Location: login_user.php"); exit();
+}
+
+$conn = new mysqli('localhost','root','','mt_db');
+if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
+
+$user_id = $_SESSION['user_id'];
+$pr = $conn->query("SELECT id FROM patients WHERE user_id=$user_id");
+if ($pr->num_rows === 0) {
+    $conn->query("INSERT INTO patients (user_id) VALUES ($user_id)");
+    $patient_id = $conn->insert_id;
+} else { $patient_id = $pr->fetch_assoc()['id']; }
+
+$message = ""; $msg_type = "";
+if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['patient_id'])) {
+    $pid        = intval($_POST['patient_id']);
+    $hotel_name = $conn->real_escape_string($_POST['hotel_name']);
+    $checkin    = $conn->real_escape_string($_POST['checkin_date']);
+    $checkout   = $conn->real_escape_string($_POST['checkout_date']);
+    $guests     = intval($_POST['num_guests']);
+    $room_type  = $conn->real_escape_string($_POST['room_type']);
+
+    if (!empty($hotel_name) && !empty($checkin) && !empty($checkout) && !empty($room_type)) {
+        if (strtotime($checkin) >= strtotime($checkout)) {
+            $message = "❌ Check-out date must be after check-in date."; $msg_type = "error";
+        } else {
+            $sql = "INSERT INTO hotel_bookings (patient_id,hotel_name,checkin_date,checkout_date,num_guests,room_type) VALUES ($pid,'$hotel_name','$checkin','$checkout',$guests,'$room_type')";
+            if ($conn->query($sql) === TRUE) { $message = "✅ Hotel booked successfully! Booking confirmed."; $msg_type = "success"; }
+            else { $message = "❌ Error: ".$conn->error; $msg_type = "error"; }
+        }
+    } else { $message = "❌ All fields are required."; $msg_type = "error"; }
+}
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hotel Booking Form - Medical Tourism Service</title>
-    <style>
-        /* Your CSS styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo img {
-            height: 50px;
-            margin-right: 10px;
-        }
-        .name h1 {
-            margin: 0;
-        }
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-        nav ul li {
-            margin-right: 20px;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            margin: 50px auto;
-            width: 80%;
-            text-align: center;
-        }
-        .form-container {
-            background-color: #f4f4f4;
-            padding: 20px;
-            border-radius: 5px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .form-group select,
-        .form-group input[type="date"],
-        .form-group input[type="time"],
-        .form-group input[type="number"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .submit-button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: #fff;
-            text-decoration: none;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .submit-button:hover {
-            background-color: #555;
-        }
-        .success-message {
-            color: green;
-            font-weight: bold;
-        }
-        .error-message {
-            color: red;
-            font-weight: bold;
-        }
-    </style>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Hotel – MedTour</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
-<body>
-    <header>
-       
-            <div class="logo">
-                <img src="logo.png" alt="Medical Tourism Service Logo">
-            </div>
-            <div class="name">
-                <h1>Medical Tourism Service</h1>
-            </div>
+<body class="bg-slate-100 min-h-screen">
+<header class="bg-gradient-to-r from-slate-900 to-sky-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="index.php" class="flex items-center gap-3">
+            <img src="logo.png" alt="Logo" class="h-10 w-10 object-contain rounded-full bg-white p-1">
+            <span class="font-bold text-lg">MedTour <span class="text-sky-300">Hotel</span></span>
         </a>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Home</a></li>
-                
-                <li><a href="login_admin.php">Admin</a></li>
-                <li><a href="login_user.php">User</a></li>
-                <li><a href="services.php">Services</a></li>
-                <li><a href="help.php">Help</a></li>
-            </ul>
+        <nav class="flex items-center gap-5">
+            <a href="welcome.php"     class="text-slate-300 hover:text-white text-sm transition">Dashboard</a>
+            <a href="logout_user.php" class="bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">Logout</a>
         </nav>
-    </header>
+    </div>
+</header>
 
-    <div class="container">
-        <div class="form-container">
-            <h2>Book Hotel</h2>
-            <?php
-            session_start();
-            
-            // Check if user is logged in
-            if (!isset($_SESSION['user_id'])) {
-                echo "<p class='error-message'>Please <a href='login_user.php'>login</a> first to book a hotel.</p>";
-            } else {
-                // Get patient ID from users table
-                $conn = new mysqli('localhost', 'root', '', 'mt_db');
-                if ($conn->connect_error) {
-                    die("Connection failed: " . $conn->connect_error);
-                }
-                
-                $user_id = $_SESSION['user_id'];
-                $patient_query = "SELECT id FROM patients WHERE user_id = $user_id";
-                $patient_result = $conn->query($patient_query);
-                
-                if ($patient_result->num_rows > 0) {
-                    $patient_row = $patient_result->fetch_assoc();
-                    $patient_id = $patient_row['id'];
-                } else {
-                    // Create patient record if it doesn't exist
-                    $create_patient = "INSERT INTO patients (user_id) VALUES ($user_id)";
-                    if ($conn->query($create_patient) === TRUE) {
-                        $patient_id = $conn->insert_id;
-                    } else {
-                        echo "<p class='error-message'>Error creating patient profile: " . $conn->error . "</p>";
-                        $conn->close();
-                        exit;
-                    }
-                }
-                
-                $conn->close();
-                ?>
-            
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST">
-                <div class="form-group">
-                    <label for="user_id">User ID:</label>
-                    <input type="text" id="user_id" name="user_id" value="<?php echo $_SESSION['user_id']; ?>" readonly>
-                    <input type="hidden" id="patient_id" name="patient_id" value="<?php echo $patient_id; ?>"
-                </div>
-                <div class="form-group">
-                    <label for="hotel_name">Hotel Name:</label>
-                    <select id="hotel_name" name="hotel_name" required>
-                        <option value="">Select Hotel</option>
+<main class="max-w-2xl mx-auto px-4 py-12">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="bg-gradient-to-r from-sky-600 to-blue-700 p-7 text-white">
+            <div class="text-3xl mb-2">🏨</div>
+            <h1 class="text-2xl font-bold">Book Hotel Accommodation</h1>
+            <p class="text-sky-100 text-sm mt-1">Choose your preferred hotel, room type and stay duration</p>
+        </div>
+
+        <div class="p-7">
+            <?php if (!empty($message)): ?>
+            <div class="<?php echo $msg_type==='success' ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-rose-50 border-rose-300 text-rose-800'; ?> border rounded-xl px-4 py-3 mb-6 text-sm font-medium">
+                <?php echo $message; ?>
+                <?php if ($msg_type==='success'): ?><br><a href="welcome.php" class="underline mt-1 inline-block">← Back to Dashboard</a><?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" class="space-y-5">
+                <input type="hidden" name="patient_id" value="<?php echo $patient_id; ?>">
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Select Hotel *</label>
+                    <select name="hotel_name" required
+                        class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 transition bg-white">
+                        <option value="">— Choose a hotel —</option>
+                        <option value="Cairo Marriott Hotel">Cairo Marriott Hotel</option>
+                        <option value="Kempinski Nile Hotel">Kempinski Nile Hotel</option>
+                        <option value="Four Seasons Cairo">Four Seasons Cairo</option>
+                        <option value="Hilton Cairo Zamalek">Hilton Cairo Zamalek</option>
+                        <option value="InterContinental Semiramis">InterContinental Semiramis</option>
                         <option value="Hotel A">Hotel A</option>
                         <option value="Hotel B">Hotel B</option>
                         <option value="Hotel C">Hotel C</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="checkin_date">Check-in Date:</label>
-                    <input type="date" id="checkin_date" name="checkin_date" required>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Check-in Date *</label>
+                        <input type="date" name="checkin_date" required min="<?php echo date('Y-m-d'); ?>"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 transition bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Check-out Date *</label>
+                        <input type="date" name="checkout_date" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 transition bg-white">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="checkout_date">Check-out Date:</label>
-                    <input type="date" id="checkout_date" name="checkout_date" required>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Number of Guests *</label>
+                        <input type="number" name="num_guests" min="1" max="10" placeholder="e.g., 2" required
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 transition bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Room Type *</label>
+                        <select name="room_type" required
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-400 transition bg-white">
+                            <option value="">— Select room —</option>
+                            <option value="Single">🛏️ Single</option>
+                            <option value="Double">🛏️🛏️ Double</option>
+                            <option value="Suite">🌟 Suite</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="num_guests">Number of Guests:</label>
-                    <input type="number" id="num_guests" name="num_guests" min="1" required>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                        🏨 Book Hotel
+                    </button>
+                    <a href="welcome.php" class="flex-1 text-center border border-slate-200 hover:bg-slate-50 text-slate-600 font-semibold py-3 rounded-xl transition">
+                        Cancel
+                    </a>
                 </div>
-                <div class="form-group">
-                    <label for="room_type">Room Type:</label>
-                    <select id="room_type" name="room_type" required>
-                        <option value="">Select Room Type</option>
-                        <option value="Single">Single</option>
-                        <option value="Double">Double</option>
-                        <option value="Suite">Suite</option>
-                    </select>
-                </div>
-                <button type="submit" class="submit-button">Book Hotel</button>
             </form>
-            
-            <?php
-            }
-            
-            // Check if the form is submitted
-            if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_SESSION['user_id'])) {
-                // Check if all fields are filled
-                if (!empty($_POST['patient_id']) && !empty($_POST['hotel_name']) && !empty($_POST['checkin_date']) && !empty($_POST['checkout_date']) && !empty($_POST['num_guests']) && !empty($_POST['room_type'])) {
-                    // Connect to the database
-                    $conn = new mysqli('localhost', 'root', '', 'mt_db');
-
-                    // Check connection
-                    if ($conn->connect_error) {
-                        die("Connection failed: " . $conn->connect_error);
-                    }
-
-                    // Sanitize and validate inputs
-                    $patient_id = intval($_POST['patient_id']);
-                    $hotel_name = $conn->real_escape_string($_POST['hotel_name']);
-                    $checkin_date = $conn->real_escape_string($_POST['checkin_date']);
-                    $checkout_date = $conn->real_escape_string($_POST['checkout_date']);
-                    $num_guests = intval($_POST['num_guests']);
-                    $room_type = $conn->real_escape_string($_POST['room_type']);
-
-                    // Validate dates
-                    if (strtotime($checkin_date) >= strtotime($checkout_date)) {
-                        echo "<p class='error-message'>Check-out date must be after check-in date.</p>";
-                    } else {
-                        // Insert hotel booking data into the database
-                        $sql = "INSERT INTO hotel_bookings (patient_id, hotel_name, checkin_date, checkout_date, num_guests, room_type)
-                                VALUES ($patient_id, '$hotel_name', '$checkin_date', '$checkout_date', $num_guests, '$room_type')";
-
-                        if ($conn->query($sql) === TRUE) {
-                            echo "<p class='success-message'>Hotel booked successfully! Your booking has been confirmed.</p>";
-                        } else {
-                            echo "<p class='error-message'>Error booking hotel: " . $conn->error . "</p>";
-                        }
-                    }
-
-                    $conn->close();
-                } else {
-                    echo "<p class='error-message'>All fields are required!</p>";
-                }
-            }
-            ?>
         </div>
     </div>
+</main>
 
+<footer class="bg-slate-900 text-slate-500 py-6 text-center text-xs mt-6">
+    <p>&copy; <?php echo date('Y'); ?> MedTour Services. All rights reserved.</p>
+</footer>
 </body>
 </html>
