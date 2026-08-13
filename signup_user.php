@@ -18,21 +18,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message_type = "error";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (name, email, password, role) VALUES ('$username', '$email', '$hashed_password', 'patient')";
-            if ($conn->query($sql) === TRUE) {
-                $user_id     = $conn->insert_id;
-                $patient_sql = "INSERT INTO patients (user_id) VALUES ($user_id)";
-                if ($conn->query($patient_sql) === TRUE) {
+            
+            $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'patient')");
+            $stmt->bind_param("sss", $username, $email, $hashed_password);
+            
+            if ($stmt->execute()) {
+                $user_id     = $stmt->insert_id;
+                $patient_stmt = $conn->prepare("INSERT INTO patients (user_id) VALUES (?)");
+                $patient_stmt->bind_param("i", $user_id);
+                
+                if ($patient_stmt->execute()) {
                     $message      = "Account created! <a href='login_user.php' class='underline font-semibold'>Login here →</a>";
                     $message_type = "success";
                 } else {
-                    $message      = "User created but patient profile error: " . $conn->error;
+                    $message      = "User created but patient profile error: " . $patient_stmt->error;
                     $message_type = "error";
                 }
+                $patient_stmt->close();
             } else {
-                $message      = "Error: " . $conn->error;
+                $message      = "Error: " . $stmt->error;
                 $message_type = "error";
             }
+            $stmt->close();
             $conn->close();
         }
     }

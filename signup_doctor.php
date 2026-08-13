@@ -16,21 +16,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message_type = "error";
     } else {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (name, email, password, role) VALUES ('$username', '$email', '$hashed_password', 'doctor')";
-        if ($conn->query($sql) === TRUE) {
-            $user_id    = $conn->insert_id;
-            $doctor_sql = "INSERT INTO doctors (user_id, specialization, experience, consultation_fee) VALUES ($user_id, '$specialization', $experience, $consultation_fee)";
-            if ($conn->query($doctor_sql) === TRUE) {
+        
+        $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'doctor')");
+        $stmt->bind_param("sss", $username, $email, $hashed_password);
+        
+        if ($stmt->execute()) {
+            $user_id    = $stmt->insert_id;
+            $doctor_stmt = $conn->prepare("INSERT INTO doctors (user_id, specialization, experience, consultation_fee) VALUES (?, ?, ?, ?)");
+            $doctor_stmt->bind_param("isid", $user_id, $specialization, $experience, $consultation_fee);
+            
+            if ($doctor_stmt->execute()) {
                 $message      = "Doctor account created! <a href='login_doctor.php' class='underline font-semibold'>Login here →</a>";
                 $message_type = "success";
             } else {
-                $message      = "Error creating doctor record: " . $conn->error;
+                $message      = "Error creating doctor record: " . $doctor_stmt->error;
                 $message_type = "error";
             }
+            $doctor_stmt->close();
         } else {
-            $message      = "Error: " . $conn->error;
+            $message      = "Error: " . $stmt->error;
             $message_type = "error";
         }
+        $stmt->close();
         $conn->close();
     }
 }

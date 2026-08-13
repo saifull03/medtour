@@ -3,12 +3,13 @@ session_start();
 $conn = new mysqli('localhost','root','','mt_db');
 if ($conn->connect_error) die("Connection failed: " . $conn->connect_error);
 
-if (isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
-    $sql = "SELECT tb.* FROM transport_bookings tb JOIN patients p ON tb.patient_id = p.id WHERE p.user_id = $user_id ORDER BY tb.id DESC";
-} else {
-    $sql = "SELECT * FROM transport_bookings ORDER BY id DESC";
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'patient') {
+    header("Location: login_user.php");
+    exit();
 }
+
+$user_id = $_SESSION['user_id'];
+$sql = "SELECT tb.* FROM transport_bookings tb JOIN patients p ON tb.patient_id = p.id WHERE p.user_id = $user_id ORDER BY tb.id DESC";
 $result = $conn->query($sql);
 $statusColors = ['pending'=>'bg-amber-100 text-amber-700','approved'=>'bg-emerald-100 text-emerald-700','completed'=>'bg-sky-100 text-sky-700','cancelled'=>'bg-rose-100 text-rose-700'];
 ?>

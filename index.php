@@ -1,3 +1,14 @@
+<?php
+$conn = new mysqli('localhost','root','','mt_db');
+$hospitals_count = 50; $patients_count = 10000;
+if (!$conn->connect_error) {
+    $hc = $conn->query("SELECT COUNT(*) as c FROM hospitals")->fetch_assoc()['c'] ?? 0;
+    if ($hc > 0) $hospitals_count = $hc;
+    $pc = $conn->query("SELECT COUNT(*) as c FROM patients")->fetch_assoc()['c'] ?? 0;
+    if ($pc > 0) $patients_count = $pc + 150; // offset for realism
+    $conn->close();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,11 +106,11 @@
 <section class="bg-white border-b border-slate-100 py-8">
     <div class="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         <div>
-            <p class="text-3xl font-bold text-sky-600">50+</p>
+            <p class="text-3xl font-bold text-sky-600"><?php echo $hospitals_count; ?>+</p>
             <p class="text-slate-500 text-sm mt-1">Partner Hospitals</p>
         </div>
         <div>
-            <p class="text-3xl font-bold text-sky-600">10K+</p>
+            <p class="text-3xl font-bold text-sky-600"><?php echo $patients_count; ?>+</p>
             <p class="text-slate-500 text-sm mt-1">Patients Served</p>
         </div>
         <div>

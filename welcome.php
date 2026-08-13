@@ -15,6 +15,14 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 $row = $result->fetch_assoc();
+
+$patient_id = $row['patient_id'] ?? $user_id;
+
+$h_count = $conn->query("SELECT COUNT(*) as c FROM appointments WHERE patient_id = $patient_id")->fetch_assoc()['c'] ?? 0;
+$t_count = $conn->query("SELECT COUNT(*) as c FROM transport_bookings WHERE patient_id = $patient_id")->fetch_assoc()['c'] ?? 0;
+$ht_count = $conn->query("SELECT COUNT(*) as c FROM hotel_bookings WHERE patient_id = $patient_id")->fetch_assoc()['c'] ?? 0;
+$v_count = $conn->query("SELECT COUNT(*) as c FROM visa_bookings WHERE patient_id = $patient_id")->fetch_assoc()['c'] ?? 0;
+
 $conn->close();
 
 $name       = htmlspecialchars($row['name'] ?? 'User');
@@ -68,20 +76,20 @@ $patient_id = $row['patient_id'] ?? $user_id;
     <!-- Quick Stats -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center">
-            <div class="text-2xl font-bold text-sky-600">4</div>
-            <div class="text-slate-500 text-xs mt-1">Services Available</div>
+            <div class="text-2xl font-bold text-sky-600"><?php echo $h_count; ?></div>
+            <div class="text-slate-500 text-xs mt-1">Appointments</div>
         </div>
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center">
-            <div class="text-2xl font-bold text-emerald-600">24/7</div>
-            <div class="text-slate-500 text-xs mt-1">Support Available</div>
+            <div class="text-2xl font-bold text-emerald-600"><?php echo $t_count; ?></div>
+            <div class="text-slate-500 text-xs mt-1">Transport Rides</div>
         </div>
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center">
-            <div class="text-2xl font-bold text-violet-600">50+</div>
-            <div class="text-slate-500 text-xs mt-1">Partner Hospitals</div>
+            <div class="text-2xl font-bold text-violet-600"><?php echo $v_count; ?></div>
+            <div class="text-slate-500 text-xs mt-1">Visa Applications</div>
         </div>
         <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-100 text-center">
-            <div class="text-2xl font-bold text-amber-600">30+</div>
-            <div class="text-slate-500 text-xs mt-1">Countries</div>
+            <div class="text-2xl font-bold text-amber-600"><?php echo $ht_count; ?></div>
+            <div class="text-slate-500 text-xs mt-1">Hotel Stays</div>
         </div>
     </div>
 
@@ -141,11 +149,15 @@ $patient_id = $row['patient_id'] ?? $user_id;
 
     <!-- My Bookings Quick Links -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">My Bookings</h2>
+        <h2 class="text-lg font-bold text-slate-800 mb-4">My Bookings Overview</h2>
         <div class="flex flex-wrap gap-3">
-            <a href="transport_bookings.php" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition">🚗 Transport Bookings</a>
-            <a href="help.php"              class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition">❓ Help & Support</a>
-            <a href="index.php"             class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition">🏠 Home</a>
+            <a href="hospital_bookings.php" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-medium px-4 py-2 rounded-lg transition">🏥 Hospital Appointments</a>
+            <a href="hotel_bookings.php"    class="bg-sky-50 hover:bg-sky-100 text-sky-700 text-sm font-medium px-4 py-2 rounded-lg transition">🏨 Hotel Reservations</a>
+            <a href="visa_bookings.php"     class="bg-violet-50 hover:bg-violet-100 text-violet-700 text-sm font-medium px-4 py-2 rounded-lg transition">📄 Visa Applications</a>
+            <a href="transport_bookings.php" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium px-4 py-2 rounded-lg transition">🚗 Transport Bookings</a>
+            <div class="w-full h-px bg-slate-100 my-2"></div>
+            <a href="help.php"              class="bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition">❓ Help & Support</a>
+            <a href="index.php"             class="bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition">🏠 Site Home</a>
         </div>
     </div>
 

@@ -15,13 +15,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $message = "Connection failed: " . $conn->connect_error; $message_type = "error";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (name, email, password, role) VALUES ('$username', '$email', '$hashed_password', 'admin')";
-            if ($conn->query($sql) === TRUE) {
+            $stmt = $conn->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')");
+            $stmt->bind_param("sss", $username, $email, $hashed_password);
+            
+            if ($stmt->execute()) {
                 $message = "Admin account created! <a href='login_admin.php' class='underline font-semibold'>Login here →</a>";
                 $message_type = "success";
             } else {
-                $message = "Error: " . $conn->error; $message_type = "error";
+                $message = "Error: " . $stmt->error; $message_type = "error";
             }
+            $stmt->close();
             $conn->close();
         }
     }
