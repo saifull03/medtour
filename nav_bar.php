@@ -1,10 +1,9 @@
-<nav>
-    <ul>
-         <li><a href="index.php">Home</a></li>
-    
-            <li><a href="login_admin.php">Admin</a></li>
-            <li><a href="login_user.php">User</a></li>
-             <li><a href="services.php">Services</a></li>
-            <li><a href="help.php">Help</a></li>
-    </ul>
-</nav>
+<?php
+/**
+ * Backwards Compatibility Redirect
+ * Legacy URL: nav_bar.php -> public/index.php
+ */
+require_once __DIR__ . '/includes/helpers.php';
+$qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
+header("Location: " . url('public/index.php') . (str_contains('public/index.php', '?') && $qs ? str_replace('?', '&', $qs) : $qs), true, 302);
+exit();
