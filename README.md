@@ -188,51 +188,27 @@ erDiagram
 Key files and folders in this repository:
 
 ```text
-├── index.php                 # Application Main Landing Page
-├── services.php              # Public services information page
-├── help.php                  # Interactive Help, FAQs, and medical tourism guide
-├── nav_bar.php               # Shared navigation layout component
-├── mt_db.sql                 # Comprehensive Database schema & sample seed data
-│
-├── login_user.php            # Patient login portal
-├── signup_user.php           # Patient registration portal
-├── welcome.php               # Patient dashboard
-│
-├── login_doctor.php          # Doctor login portal
-├── signup_doctor.php         # Doctor registration portal
-├── welcome_doctor.php        # Doctor dashboard
-├── view_appointments.php     # Doctor appointment tracker list
-│
-├── login_admin.php           # Admin login portal
-├── signup_admin.php          # Admin registration portal
-├── welcome_admin.php         # Admin dashboard control center
-│
-├── hotel.php                 # Hotel booking form
-├── transport.php             # Transport booking form
-├── hospital.php              # Hospital booking form
-├── visa.php                  # Visa assistance form
-│
-├── submit_hotel.php          # Hotel form submission handler
-├── submit_transport.php      # Transport form submission handler
-├── submit_hospital.php       # Hospital/Appointment form handler
-├── submit_visa.php           # Visa form submission handler
-│
-├── hotel_bookings.php        # Patient's hotel booking management
-├── transport_bookings.php    # Patient's transport booking management
-├── visa_bookings.php         # Patient's visa booking management
-├── hospital_bookings.php     # Patient's hospital booking management
-│
-├── view_admin_hotel.php      # Admin view for hotel reservations
-├── view_admin_transport.php  # Admin view for transport bookings
-├── view_admin_hospital.php   # Admin view for hospital appointments
-├── view_admin_visa.php       # Admin view for visa applications
-│
-├── update.php                # Booking details editor page
-├── update_process.php        # Process updates from editor forms
-├── delete.php                # Booking cancellation & deletion handler
-├── logout_user.php           # Patient session termination
-├── logout_doctor.php         # Doctor session termination
-└── logout_admin.php          # Admin session termination
+├── actions/                  # State-changing POST form handlers (login, register, bookings)
+├── admin/                    # Administrator control center & management interfaces
+├── assets/                   # Static assets (CSS styles, optimized images)
+│   ├── css/style.css         # Custom modern Vanilla CSS design system
+│   └── images/               # High-resolution optimized illustrations & logo
+├── config/                   # System constants & database connection singletons
+├── database/                 # Schema migrations & SQL dumps (mt_db.sql)
+├── docs/                     # Architectural documentation & operational manuals
+├── doctor/                   # Physician clinical appointment & consultation portals
+├── includes/                 # Reusable layout components, auth guards, CSRF & flash helpers
+├── logs/                     # System event & security audit log files
+├── patient/                  # Patient dashboard, booking management & service forms
+├── public/                   # Public-facing views (landing, services, help, unified login, signup)
+│   ├── index.php             # Main landing page
+│   ├── services.php          # Services catalog
+│   ├── help.php              # FAQs & support center
+│   ├── login.php             # Unified common login (Admin, Doctor, Patient)
+│   └── signup_*.php          # User registration flows
+├── .htaccess                 # Apache rewrite engine & legacy URL compatibility routing
+├── index.php                 # Root application router
+└── README.md                 # Project documentation
 ```
 
 ---
@@ -268,9 +244,9 @@ Clone this repository or download the source code and place it inside the docume
 
 ## 💡 Quick Test Guide
 
-1. **Sign Up:** Go to the home page, select "Sign Up" or "Login" to register as a **Patient**, **Doctor**, or **Admin** (via the respective login page links).
+1. **Sign Up & Sign In:** Use the header "Login" link (`login.php`) to sign into any account (Patient, Doctor, or Admin). The system automatically routes you to the appropriate dashboard.
 2. **Bookings Flow:** Once logged in as a patient, select any service (e.g. transport) and fill in the booking details.
-3. **Approval Flow:** Log in as an Administrator (`login_admin.php`) to see the newly submitted booking, update its status, or delete records.
+3. **Approval Flow:** Log in as an Administrator (`login.php`) to see the newly submitted booking, update its status, or delete records.
 
 ---
 

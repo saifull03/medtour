@@ -114,7 +114,7 @@ require_once __DIR__ . '/../includes/header.php';
         </form>
 
         <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.85rem; color: var(--text-muted);">
-            Already have a doctor profile? <a href="<?php echo url('public/login_doctor.php'); ?>" style="font-weight: 600;">Sign in here &rarr;</a>
+            Already have a doctor profile? <a href="<?php echo url('public/login.php'); ?>" style="font-weight: 600;">Sign in here &rarr;</a>
         </div>
     </div>
 </div>

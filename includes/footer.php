@@ -37,11 +37,11 @@ clearFormFlash();
             </div>
 
             <div>
-                <h4 class="footer-heading">Portals & Access</h4>
+                <h4 class="footer-heading">Access & Support</h4>
                 <ul class="footer-links">
-                    <li><a href="<?php echo url('public/login_user.php'); ?>">Patient Portal</a></li>
-                    <li><a href="<?php echo url('public/login_doctor.php'); ?>">Doctor Portal</a></li>
-                    <li><a href="<?php echo url('public/login_admin.php'); ?>">Administration Panel</a></li>
+                    <li><a href="<?php echo url('public/login.php'); ?>">Account Sign In</a></li>
+                    <li><a href="<?php echo url('public/signup_user.php'); ?>">Patient Registration</a></li>
+                    <li><a href="<?php echo url('public/signup_doctor.php'); ?>">Doctor Registration</a></li>
                     <li><a href="<?php echo url('public/help.php'); ?>">Help & FAQs</a></li>
                 </ul>
             </div>

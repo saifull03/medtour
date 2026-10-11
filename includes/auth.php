@@ -43,7 +43,7 @@ function requireLogin(): void
 {
     if (!isLoggedIn()) {
         setFlash('error', 'Please log in to access this page.');
-        header('Location: ' . url('public/login_user.php'));
+        header('Location: ' . url('public/login.php'));
         exit();
     }
 
@@ -118,7 +118,9 @@ function redirectByRole(?string $role = null): void
  */
 function loginUser(array $user): void
 {
-    session_regenerate_id(true);
+    if (!headers_sent()) {
+        session_regenerate_id(true);
+    }
 
     $pdo = getDbConnection();
     $patientId = null;
@@ -192,7 +194,7 @@ function verifyAccountActive(): void
         if ($status === false || (int)$status !== 1) {
             logoutUser();
             setFlash('error', 'Your account has been deactivated. Please contact support.');
-            header('Location: ' . url('public/login_user.php'));
+            header('Location: ' . url('public/login.php'));
             exit();
         }
     } catch (Exception $e) {

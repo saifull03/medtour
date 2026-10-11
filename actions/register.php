@@ -27,7 +27,7 @@ if ($role === ROLE_ADMIN) {
     $currentUser = currentUser();
     if (!$currentUser || $currentUser['role'] !== ROLE_ADMIN) {
         setFlash('error', 'Administrator accounts cannot be registered publicly. Only existing administrators can create admin accounts.');
-        header('Location: ' . url('public/login_admin.php'));
+        header('Location: ' . url('public/login.php'));
         exit();
     }
     $isAdminCreation = true;
@@ -85,11 +85,7 @@ try {
 
     appLog('REGISTER_SUCCESS', ['user_id' => $userId, 'email' => $email, 'role' => $role]);
 
-    $loginTarget = match ($role) {
-        ROLE_DOCTOR => url('public/login_doctor.php'),
-        ROLE_ADMIN  => url('public/login_admin.php'),
-        default     => url('public/login_user.php'),
-    };
+    $loginTarget = url('public/login.php');
 
     setFlash('success', 'Registration successful! You may now sign in with your credentials.');
     header('Location: ' . $loginTarget);

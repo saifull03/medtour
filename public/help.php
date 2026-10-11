@@ -66,7 +66,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
             <a href="tel:+201002345678" class="btn btn-primary btn-sm">📞 Call +20 (0) 100 234 5678</a>
             <a href="mailto:support@medtourservices.com" class="btn btn-outline btn-sm">✉️ Email Support</a>
-            <a href="<?php echo url('public/login_user.php'); ?>" class="btn btn-secondary btn-sm">Patient Portal Login</a>
+            <a href="<?php echo url('public/login.php'); ?>" class="btn btn-secondary btn-sm">Account Login</a>
         </div>
     </div>
 </div>

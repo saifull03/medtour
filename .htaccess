@@ -1,0 +1,54 @@
+# MedTour Services - Apache Configuration & URL Router
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /medtour/
+
+    # Legacy Image Requests at Root -> Assets Images
+    RewriteRule ^(background\.png|hospital\.png|hotel\.png|logo\.png|slide1\.jpg|slide2\.jpg|transport\.png|transport_bookings\.jpg|visa\.png)$ assets/images/$1 [L]
+
+    # Unified Authentication Portal (All user roles)
+    RewriteRule ^(login|login_user|login_doctor|login_admin)\.php$ public/login.php [R=302,L,QSA]
+    RewriteRule ^public/(login_user|login_doctor|login_admin)\.php$ public/login.php [R=302,L,QSA]
+
+    # Public Pages
+    RewriteRule ^services\.php$ public/services.php [R=302,L,QSA]
+    RewriteRule ^help\.php$ public/help.php [R=302,L,QSA]
+    RewriteRule ^signup_user\.php$ public/signup_user.php [R=302,L,QSA]
+    RewriteRule ^signup_doctor\.php$ public/signup_doctor.php [R=302,L,QSA]
+    RewriteRule ^signup_admin\.php$ public/signup_admin.php [R=302,L,QSA]
+    RewriteRule ^(logout|logout_user|logout_doctor|logout_admin)\.php$ public/logout.php [R=302,L,QSA]
+
+    # Patient Portal Pages
+    RewriteRule ^(welcome|dashboard)\.php$ patient/dashboard.php [R=302,L,QSA]
+    RewriteRule ^hospital\.php$ patient/hospital.php [R=302,L,QSA]
+    RewriteRule ^hotel\.php$ patient/hotel.php [R=302,L,QSA]
+    RewriteRule ^transport\.php$ patient/transport.php [R=302,L,QSA]
+    RewriteRule ^visa\.php$ patient/visa.php [R=302,L,QSA]
+    RewriteRule ^hospital_bookings\.php$ patient/bookings.php?service=hospital [R=302,L,QSA]
+    RewriteRule ^hotel_bookings\.php$ patient/bookings.php?service=hotel [R=302,L,QSA]
+    RewriteRule ^transport_bookings\.php$ patient/bookings.php?service=transport [R=302,L,QSA]
+    RewriteRule ^visa_bookings\.php$ patient/bookings.php?service=visa [R=302,L,QSA]
+    RewriteRule ^(delete|update|update_process)\.php$ patient/bookings.php [R=302,L,QSA]
+    RewriteRule ^submit_hospital\.php$ patient/hospital.php [R=302,L,QSA]
+    RewriteRule ^submit_hotel\.php$ patient/hotel.php [R=302,L,QSA]
+    RewriteRule ^submit_transport\.php$ patient/transport.php [R=302,L,QSA]
+    RewriteRule ^submit_visa\.php$ patient/visa.php [R=302,L,QSA]
+
+    # Doctor Portal Pages
+    RewriteRule ^welcome_doctor\.php$ doctor/dashboard.php [R=302,L,QSA]
+    RewriteRule ^view_appointments\.php$ doctor/appointments.php [R=302,L,QSA]
+
+    # Admin Portal Pages
+    RewriteRule ^welcome_admin\.php$ admin/dashboard.php [R=302,L,QSA]
+    RewriteRule ^view_admin_hospital\.php$ admin/hospital_bookings.php [R=302,L,QSA]
+    RewriteRule ^view_admin_hotel\.php$ admin/hotel_bookings.php [R=302,L,QSA]
+    RewriteRule ^view_admin_transport\.php$ admin/transport_bookings.php [R=302,L,QSA]
+    RewriteRule ^view_admin_visa\.php$ admin/visa_bookings.php [R=302,L,QSA]
+    RewriteRule ^view_hospital_appointment\.php$ admin/hospital_bookings.php [R=302,L,QSA]
+
+    # Misc Legacy Files
+    RewriteRule ^(form|madetea|test_insert|nav_bar|debug_schema)\.php$ public/index.php [R=302,L,QSA]
+</IfModule>
+
+# Prevent directory indexing
+Options -Indexes

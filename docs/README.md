@@ -26,9 +26,7 @@ c:\xampp\htdocs\medtour\
 │   ├── index.php                # Public landing page with live dynamic statistics
 │   ├── services.php             # Medical tourism services overview
 │   ├── help.php                 # Knowledge center & FAQs
-│   ├── login_user.php           # Patient portal authentication
-│   ├── login_doctor.php         # Physician portal authentication
-│   ├── login_admin.php          # Administration portal authentication
+│   ├── login.php                # Unified authentication entry point (Admin, Doctor & Patient)
 │   ├── signup_user.php          # Patient registration
 │   ├── signup_doctor.php        # Physician onboarding
 │   ├── signup_admin.php         # Restricted administrator provisioning
@@ -98,6 +96,7 @@ c:\xampp\htdocs\medtour\
    - Passwords are encrypted using bcrypt via `password_hash($password, PASSWORD_DEFAULT)` and verified via `password_verify()`. Plain-text passwords are never stored or logged.
    - Strong password policies enforced (minimum 8 characters, uppercase, lowercase, number).
 6. **Authorization & RBAC:**
+   - **Unified Login Entry Point:** All users (Patients, Doctors, and Administrators) authenticate through the single common portal at `public/login.php`. No separate admin or doctor login sections are exposed publicly. Upon credential verification, the system securely inspects the verified user's assigned role and automatically routes them to their corresponding dashboard (`admin/dashboard.php`, `doctor/dashboard.php`, or `patient/dashboard.php`).
    - Strict guards: `requireLogin()`, `requirePatient()`, `requireDoctor()`, `requireAdmin()`.
    - Patients can only view and cancel their own bookings.
    - Doctors can only view and update appointments assigned to their doctor ID.
@@ -122,6 +121,6 @@ Default System Credentials:
 
 ---
 
-## 4. Backwards Compatibility
+## 4. Backwards Compatibility & URL Routing
 
-All legacy root URL entry points (such as `login_user.php`, `welcome.php`, `view_admin_hospital.php`, etc.) contain non-breaking 302 HTTP redirects that forward incoming requests to their new organized counterparts while preserving all GET query string parameters.
+All legacy root URL entry points (such as `login.php`, `login_user.php`, `welcome.php`, `hospital.php`, `view_admin_hospital.php`, etc.) and root image assets are seamlessly forwarded to their organized counterparts via `.htaccess` Apache rewrite rules with non-breaking 302 HTTP redirects, keeping the root directory clean and clutter-free while preserving all GET query string parameters.

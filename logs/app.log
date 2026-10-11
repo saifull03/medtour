@@ -1,0 +1,9 @@
+[2026-10-11 14:12:14] [CLI] User:4 Role:admin Action:LOGIN_SUCCESS Details:{"user_id":4,"email":"admin@medtour.com","role":"admin"}
+[2026-10-11 14:12:14] [CLI] User:2 Role:doctor Action:LOGIN_SUCCESS Details:{"user_id":2,"email":"siddik@gmail.com","role":"doctor"}
+[2026-10-11 14:12:14] [CLI] User:1 Role:patient Action:LOGIN_SUCCESS Details:{"user_id":1,"email":"saiful@gmail.com","role":"patient"}
+[2026-10-11 14:12:51] [CLI] User:4 Role:admin Action:LOGIN_SUCCESS Details:{"user_id":4,"email":"admin@medtour.com","role":"admin"}
+[2026-10-11 14:12:51] [CLI] User:2 Role:doctor Action:LOGIN_SUCCESS Details:{"user_id":2,"email":"siddik@gmail.com","role":"doctor"}
+[2026-10-11 14:12:51] [CLI] User:1 Role:patient Action:LOGIN_SUCCESS Details:{"user_id":1,"email":"saiful@gmail.com","role":"patient"}
+[2026-10-11 14:54:32] [CLI] User:4 Role:admin Action:LOGIN_SUCCESS Details:{"user_id":4,"email":"admin@medtour.com","role":"admin"}
+[2026-10-11 14:54:32] [CLI] User:2 Role:doctor Action:LOGIN_SUCCESS Details:{"user_id":2,"email":"siddik@gmail.com","role":"doctor"}
+[2026-10-11 14:54:32] [CLI] User:1 Role:patient Action:LOGIN_SUCCESS Details:{"user_id":1,"email":"saiful@gmail.com","role":"patient"}

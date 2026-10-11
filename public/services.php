@@ -29,7 +29,7 @@ require_once __DIR__ . '/../includes/header.php';
             <h2 style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem;">1. Hospital Appointments & Surgeries</h2>
             <p style="color: var(--text-muted); font-size: 0.95rem;">Accredited partner facilities featuring modern diagnostic equipment, intensive care units, and international patient wings.</p>
         </div>
-        <a href="<?php echo url(isLoggedIn() ? 'patient/hospital.php' : 'public/login_user.php'); ?>" class="btn btn-primary">
+        <a href="<?php echo url(isLoggedIn() ? 'patient/hospital.php' : 'public/login.php'); ?>" class="btn btn-primary">
             Schedule Appointment &rarr;
         </a>
     </div>
@@ -58,7 +58,7 @@ require_once __DIR__ . '/../includes/header.php';
             <h2 style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem;">2. Partner Hotel Accommodations</h2>
             <p style="color: var(--text-muted); font-size: 0.95rem;">Hand-picked recuperation hotels with room-service dietary options, elevator accessibility, and quiet settings near clinics.</p>
         </div>
-        <a href="<?php echo url(isLoggedIn() ? 'patient/hotel.php' : 'public/login_user.php'); ?>" class="btn btn-primary">
+        <a href="<?php echo url(isLoggedIn() ? 'patient/hotel.php' : 'public/login.php'); ?>" class="btn btn-primary">
             Reserve Lodging &rarr;
         </a>
     </div>
@@ -87,7 +87,7 @@ require_once __DIR__ . '/../includes/header.php';
             <h2 style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem;">3. Medical Transfers & Logistics</h2>
             <p style="color: var(--text-muted); font-size: 0.95rem;">Punctual, climate-controlled, and sanitized transit options for patient ease and caregiver convenience.</p>
         </div>
-        <a href="<?php echo url(isLoggedIn() ? 'patient/transport.php' : 'public/login_user.php'); ?>" class="btn btn-primary">
+        <a href="<?php echo url(isLoggedIn() ? 'patient/transport.php' : 'public/login.php'); ?>" class="btn btn-primary">
             Book Transport &rarr;
         </a>
     </div>
@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
             <h2 style="font-size: 1.875rem; font-weight: 800; color: #0f172a; margin-top: 0.5rem;">4. Visa & Consular Documentation</h2>
             <p style="color: var(--text-muted); font-size: 0.95rem;">Liaison with national consulates, hospital invitation documentation, and expedited entry visas.</p>
         </div>
-        <a href="<?php echo url(isLoggedIn() ? 'patient/visa.php' : 'public/login_user.php'); ?>" class="btn btn-primary">
+        <a href="<?php echo url(isLoggedIn() ? 'patient/visa.php' : 'public/login.php'); ?>" class="btn btn-primary">
             Apply for Visa &rarr;
         </a>
     </div>

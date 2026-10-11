@@ -34,7 +34,7 @@ require_once __DIR__ . '/../includes/header.php';
                 In accordance with MedTour security policy, administrative accounts cannot be created publicly. New administrators can only be provisioned by an existing system administrator logged into the administration panel.
             </p>
             <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-                <a href="<?php echo url('public/login_admin.php'); ?>" class="btn btn-secondary">Admin Login &rarr;</a>
+                <a href="<?php echo url('public/login.php'); ?>" class="btn btn-secondary">Sign In &rarr;</a>
                 <a href="<?php echo url('public/index.php'); ?>" class="btn btn-outline">Return to Home</a>
             </div>
         </div>

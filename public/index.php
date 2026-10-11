@@ -88,7 +88,7 @@ require_once __DIR__ . '/../includes/header.php';
                     Schedule consultations and surgeries with world-class accredited partner hospitals and specialized medical surgeons.
                 </p>
             </div>
-            <a href="<?php echo url(isLoggedIn() ? 'patient/hospital.php' : 'public/login_user.php'); ?>" class="btn btn-outline btn-sm">Schedule Appointment &rarr;</a>
+            <a href="<?php echo url(isLoggedIn() ? 'patient/hospital.php' : 'public/login.php'); ?>" class="btn btn-outline btn-sm">Schedule Appointment &rarr;</a>
         </div>
 
         <!-- Hotel -->
@@ -100,7 +100,7 @@ require_once __DIR__ . '/../includes/header.php';
                     Reserve restful, accessible recovery accommodations located in close proximity to medical facilities.
                 </p>
             </div>
-            <a href="<?php echo url(isLoggedIn() ? 'patient/hotel.php' : 'public/login_user.php'); ?>" class="btn btn-outline btn-sm">Reserve Lodging &rarr;</a>
+            <a href="<?php echo url(isLoggedIn() ? 'patient/hotel.php' : 'public/login.php'); ?>" class="btn btn-outline btn-sm">Reserve Lodging &rarr;</a>
         </div>
 
         <!-- Transport -->
@@ -112,7 +112,7 @@ require_once __DIR__ . '/../includes/header.php';
                     Airport meet-and-greet, scheduled hospital transfers, and specialized medical ambulances on demand.
                 </p>
             </div>
-            <a href="<?php echo url(isLoggedIn() ? 'patient/transport.php' : 'public/login_user.php'); ?>" class="btn btn-outline btn-sm">Book Transfer &rarr;</a>
+            <a href="<?php echo url(isLoggedIn() ? 'patient/transport.php' : 'public/login.php'); ?>" class="btn btn-outline btn-sm">Book Transfer &rarr;</a>
         </div>
 
         <!-- Visa -->
@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
                     Expedited medical travel visas, official invitation letters, and consular document facilitation.
                 </p>
             </div>
-            <a href="<?php echo url(isLoggedIn() ? 'patient/visa.php' : 'public/login_user.php'); ?>" class="btn btn-outline btn-sm">Apply for Visa &rarr;</a>
+            <a href="<?php echo url(isLoggedIn() ? 'patient/visa.php' : 'public/login.php'); ?>" class="btn btn-outline btn-sm">Apply for Visa &rarr;</a>
         </div>
     </div>
 </section>

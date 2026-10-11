@@ -24,12 +24,10 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 
         <ul class="nav-menu">
             <?php if (!$user): ?>
-                <!-- Public / Guest Navigation -->
+                <!-- Public / Guest Navigation (Unified: No separate section for Admin) -->
                 <li><a href="<?php echo url('public/index.php'); ?>" class="nav-link <?php echo $currentScript === 'index.php' ? 'active' : ''; ?>">Home</a></li>
                 <li><a href="<?php echo url('public/services.php'); ?>" class="nav-link <?php echo $currentScript === 'services.php' ? 'active' : ''; ?>">Services</a></li>
                 <li><a href="<?php echo url('public/help.php'); ?>" class="nav-link <?php echo $currentScript === 'help.php' ? 'active' : ''; ?>">Help & FAQ</a></li>
-                <li><a href="<?php echo url('public/login_doctor.php'); ?>" class="nav-link <?php echo $currentScript === 'login_doctor.php' ? 'active' : ''; ?>">Doctor Portal</a></li>
-                <li><a href="<?php echo url('public/login_admin.php'); ?>" class="nav-link <?php echo $currentScript === 'login_admin.php' ? 'active' : ''; ?>">Admin</a></li>
             <?php elseif ($role === ROLE_PATIENT): ?>
                 <!-- Patient Navigation -->
                 <li><a href="<?php echo url('patient/dashboard.php'); ?>" class="nav-link <?php echo $currentScript === 'dashboard.php' ? 'active' : ''; ?>">Dashboard</a></li>
@@ -59,7 +57,8 @@ $currentScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
 
         <div class="nav-actions">
             <?php if (!$user): ?>
-                <a href="<?php echo url('public/login_user.php'); ?>" class="btn btn-outline-white btn-sm">Patient Login</a>
+                <!-- Common Unified Login for All Users -->
+                <a href="<?php echo url('public/login.php'); ?>" class="btn btn-outline-white btn-sm">Login</a>
                 <a href="<?php echo url('public/signup_user.php'); ?>" class="btn btn-primary btn-sm">Sign Up</a>
             <?php else: ?>
                 <span class="user-greeting" style="color: #cbd5e1; font-size: 0.85rem; font-weight: 500;">
